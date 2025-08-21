@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.live import Live
 from rich.panel import Panel
-from rich.layout import Layout
+
 import select
 import sys
 
@@ -409,12 +409,16 @@ def input_thread():
 
 
 def main():
+    print("DEBUG: Iniciando main()")
     console.clear()
+    print("DEBUG: Console limpo")
+    
     console.print(Panel.fit(
         "[bold blue]🎯 Monitor de Automações JC Decor[/bold blue]\n"
         "[dim]Sistema de Centralização de Logs[/dim]",
         border_style="blue"
     ))
+    print("DEBUG: Título exibido")
     
     # Inicia thread de input
     print("DEBUG: Iniciando thread de input...")
