@@ -344,7 +344,18 @@ def process_command(cmd):
         return False
         
     elif cmd == "help":
-        console.print(build_help_panel())
+        help_text = """
+[bold green]💡 Comandos Disponíveis:[/bold green]
+   force <nome>  → Força verificação imediata
+   refresh       → Atualiza todas as automações
+   quit          → Sai do sistema
+   help          → Mostra esta ajuda
+   
+[bold cyan]🔍 Exemplos:[/bold cyan]
+   force C1      → Verifica C1 imediatamente
+   force P1      → Verifica P1 imediatamente
+"""
+        console.print(help_text)
         return True
         
     elif cmd == "":
