@@ -7,21 +7,14 @@ Autor: Sistema de Automação
 
 import os
 import time
-import threading
-import queue
 from datetime import datetime
 from rich.console import Console
 from rich.table import Table
-from rich.live import Live
 from rich.panel import Panel
-
-import select
-import sys
 
 # Configuração
 LOG_FILE = "run.log"
 console = Console()
-command_queue = queue.Queue()
 
 
 class Automacao:
@@ -94,9 +87,11 @@ class Automacao:
             return
 
         # Verifica se há erros primeiro
-        if any(p.lower() in last_line.lower() for p in self.logs_fail):
+        if any(p.lower() in last_line.lower() 
+               for p in self.logs_fail):
             self.status = "ERROR"
-        elif any(p.lower() in last_line.lower() for p in self.logs_ok):
+        elif any(p.lower() in last_line.lower() 
+                 for p in self.logs_ok):
             self.status = "OK"
         else:
             # Se não encontrou padrões específicos, verifica se executou com sucesso
@@ -300,12 +295,22 @@ def build_dashboard():
         if len(auto.horarios) > 2:
             horarios_str += "..."
         
+        # Trunca mensagem se necessário
+        msg_display = (auto.ultima_msg[:35] + "..." 
+                      if len(auto.ultima_msg) > 35 
+                      else auto.ultima_msg)
+        
+        # Formata verificação
+        verif_display = (auto.ultima_verificacao[-8:] 
+                        if auto.ultima_verificacao 
+                        else "Nunca")
+        
         table.add_row(
             auto.nome,
             horarios_str,
             f"[{status_color}]{status_icon} {auto.status}[/{status_color}]",
-            auto.ultima_msg[:35] + "..." if len(auto.ultima_msg) > 35 else auto.ultima_msg,
-            auto.ultima_verificacao[-8:] if auto.ultima_verificacao else "Nunca"  # Só hora
+            msg_display,
+            verif_display
         )
     
     return table
@@ -353,15 +358,7 @@ def process_command(cmd):
         return True
 
 
-def input_thread():
-    """Thread separada para capturar input sem bloquear o loop principal"""
-    while True:
-        try:
-            if select.select([sys.stdin], [], [], 0.1)[0]:
-                cmd = input().strip()
-                command_queue.put(cmd)
-        except (EOFError, KeyboardInterrupt):
-            break
+
 
 
 def main():
@@ -369,18 +366,13 @@ def main():
     console.clear()
     print("DEBUG: Console limpo")
     
+    # Exibe título
     console.print(Panel.fit(
         "[bold blue]🎯 Monitor de Automações JC Decor[/bold blue]\n"
         "[dim]Sistema de Centralização de Logs[/dim]",
         border_style="blue"
     ))
     print("DEBUG: Título exibido")
-    
-    # Inicia thread de input
-    print("DEBUG: Iniciando thread de input...")
-    input_thread_obj = threading.Thread(target=input_thread, daemon=True)
-    input_thread_obj.start()
-    print("DEBUG: Thread de input iniciada")
     
     # Primeira verificação
     print("DEBUG: Iniciando primeira verificação...")
@@ -389,39 +381,48 @@ def main():
         auto.verificar()
     print("DEBUG: Primeira verificação concluída")
     
+    # Loop principal simplificado
+    print("DEBUG: Iniciando loop principal...")
     try:
-        print("DEBUG: Iniciando Live...")
-        with Live(
-            build_dashboard(),
-            refresh_per_second=1,
-            screen=True
-        ) as live:
-            print("DEBUG: Live iniciado, entrando no loop principal")
+        while True:
+            # Limpa tela e mostra dashboard
+            console.clear()
+            console.print(Panel.fit(
+                "[bold blue]🎯 Monitor de Automações JC Decor[/bold blue]\n"
+                "[dim]Sistema de Centralização de Logs[/dim]",
+                border_style="blue"
+            ))
             
-            while True:
-                # Processa comandos pendentes
-                try:
-                    while not command_queue.empty():
-                        cmd = command_queue.get_nowait()
-                        if not process_command(cmd):
-                            break
-                except queue.Empty:
-                    pass
-                
-                # Verificações automáticas
-                for auto in AUTOMACOES:
-                    if auto.deve_verificar():
-                        auto.verificar()
-                
-                # Atualiza interface
-                live.update(build_dashboard())
-                
-                time.sleep(1)
-                
+            # Mostra tabela
+            console.print(build_dashboard())
+            
+            # Mostra comandos disponíveis
+            console.print("\n[bold green]Comandos:[/bold green] "
+                         "force <nome> | refresh | quit")
+            console.print("[dim]Digite um comando ou pressione Enter para atualizar...[/dim]")
+            
+            # Captura comando
+            try:
+                cmd = input("> ").strip()
+                if cmd:
+                    if not process_command(cmd):
+                        break
+            except (EOFError, KeyboardInterrupt):
+                break
+            
+            # Verificações automáticas
+            for auto in AUTOMACOES:
+                if auto.deve_verificar():
+                    auto.verificar()
+            
+            # Pequena pausa
+            time.sleep(0.5)
+            
     except KeyboardInterrupt:
         console.print("\n[yellow]👋 Sistema interrompido pelo usuário[/yellow]")
     except Exception as e:
         console.print(f"[red]❌ Erro no sistema: {e}[/red]")
+        print(f"DEBUG: Erro capturado: {e}")
 
 
 if __name__ == "__main__":
