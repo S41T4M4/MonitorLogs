@@ -417,23 +417,26 @@ def main():
     ))
     
     # Inicia thread de input
+    print("DEBUG: Iniciando thread de input...")
     input_thread_obj = threading.Thread(target=input_thread, daemon=True)
     input_thread_obj.start()
+    print("DEBUG: Thread de input iniciada")
     
     # Primeira verificação
-    for auto in AUTOMACOES:
+    print("DEBUG: Iniciando primeira verificação...")
+    for i, auto in enumerate(AUTOMACOES):
+        print(f"DEBUG: Verificando {auto.nome} ({i+1}/{len(AUTOMACOES)})")
         auto.verificar()
+    print("DEBUG: Primeira verificação concluída")
     
     try:
+        print("DEBUG: Iniciando Live...")
         with Live(
-            Layout([
-                Layout(name="header", size=3),
-                Layout(name="main"),
-                Layout(name="footer", size=8)
-            ]),
+            build_dashboard(),
             refresh_per_second=1,
             screen=True
         ) as live:
+            print("DEBUG: Live iniciado, entrando no loop principal")
             
             while True:
                 # Processa comandos pendentes
@@ -451,10 +454,7 @@ def main():
                         auto.verificar()
                 
                 # Atualiza interface
-                layout = live.layout
-                layout["header"].update(build_status_panel())
-                layout["main"].update(build_table())
-                layout["footer"].update(build_help_panel())
+                live.update(build_dashboard())
                 
                 time.sleep(1)
                 
