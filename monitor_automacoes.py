@@ -262,7 +262,8 @@ AUTOMACOES = [
 ]
 
 
-def build_table():
+def build_dashboard():
+    # Cria apenas a tabela principal (versão simplificada)
     table = Table(
         title="🎯 Painel de Controle - Automações JC Decor",
         show_lines=True,
@@ -270,11 +271,11 @@ def build_table():
         header_style="bold white"
     )
     
-    table.add_column("Automação", style="bold cyan", width=8)
-    table.add_column("Horário Execução", style="dim", width=15)
+    table.add_column("Automação", style="bold cyan", width=10)
+    table.add_column("Horário", style="dim", width=15)
     table.add_column("Status", style="bold", width=12)
-    table.add_column("Última Mensagem", overflow="fold", width=40)
-    table.add_column("Última Verificação", style="dim", width=20)
+    table.add_column("Última Mensagem", overflow="fold", width=35)
+    table.add_column("Verificação", style="dim", width=18)
 
     for auto in AUTOMACOES:
         # Define cores baseadas no status
@@ -284,9 +285,6 @@ def build_table():
         elif auto.status == "ERROR":
             status_color = "red"
             status_icon = "❌"
-        elif auto.status == "WARN":
-            status_color = "yellow"
-            status_icon = "⚠️"
         elif auto.status == "Verificando...":
             status_color = "cyan"
             status_icon = "🔄"
@@ -298,63 +296,21 @@ def build_table():
             status_icon = "❓"
 
         # Formata horários
-        horarios_str = ",".join(auto.horarios)
+        horarios_str = ",".join(auto.horarios[:2])  # Mostra só os 2 primeiros
+        if len(auto.horarios) > 2:
+            horarios_str += "..."
         
         table.add_row(
-            f"{auto.nome}",
+            auto.nome,
             horarios_str,
             f"[{status_color}]{status_icon} {auto.status}[/{status_color}]",
-            auto.ultima_msg,
-            auto.ultima_verificacao
+            auto.ultima_msg[:35] + "..." if len(auto.ultima_msg) > 35 else auto.ultima_msg,
+            auto.ultima_verificacao[-8:] if auto.ultima_verificacao else "Nunca"  # Só hora
         )
     
     return table
 
 
-def build_status_panel():
-    total = len(AUTOMACOES)
-    ok_count = sum(1 for auto in AUTOMACOES if auto.status == "OK")
-    error_count = sum(1 for auto in AUTOMACOES if auto.status == "ERROR")
-    unknown_count = sum(1 for auto in AUTOMACOES
-                        if auto.status in ["UNKNOWN", "NO_LOG"])
-    
-    status_text = f"""
-📊 Resumo do Sistema:
-   Total de Automações: {total}
-   ✅ Funcionando: {ok_count}
-   ❌ Com Erro: {error_count}
-   ❓ Desconhecido: {unknown_count}
-   
-⏰ Última Atualização: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-"""
-    
-    return Panel(
-        status_text,
-        title="📈 Status Geral",
-        border_style="blue",
-        padding=(1, 2)
-    )
-
-
-def build_help_panel():
-    help_text = """
-💡 Comandos Disponíveis:
-   force <nome>  → Força verificação imediata
-   refresh       → Atualiza todas as automações
-   quit          → Sai do sistema
-   help          → Mostra esta ajuda
-   
-🔍 Exemplos:
-   force C1      → Verifica C1 imediatamente
-   force P1      → Verifica P1 imediatamente
-"""
-    
-    return Panel(
-        help_text,
-        title="🛠️ Ajuda",
-        border_style="green",
-        padding=(1, 2)
-    )
 
 
 def process_command(cmd):
