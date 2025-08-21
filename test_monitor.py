@@ -6,25 +6,40 @@ from rich.panel import Panel
 
 console = Console()
 
-def test_basic():
-    print("=== TESTE BÁSICO ===")
+def test_monitor_simulation():
+    print("=== TESTE SIMULAÇÃO DO MONITOR ===")
     
-    # Teste 1: Console básico
-    console.print("[bold blue]Teste 1: Console funcionando![/bold blue]")
+    # Simula exatamente o que o monitor faz
+    console.clear()
     
-    # Teste 2: Panel
-    panel = Panel("Teste de Panel", title="Panel OK", border_style="blue")
-    console.print(panel)
+    # 1. Título (igual ao monitor)
+    console.print(Panel.fit(
+        "[bold blue]🎯 Monitor de Automações JC Decor[/bold blue]\n"
+        "[dim]Sistema de Centralização de Logs[/dim]",
+        border_style="blue"
+    ))
     
-    # Teste 3: Table
-    table = Table(title="Teste de Tabela")
-    table.add_column("Nome")
-    table.add_column("Status")
-    table.add_row("C1", "✅ OK")
-    table.add_row("P1", "❌ ERROR")
+    # 2. Tabela (igual ao monitor)
+    table = Table(
+        title="🎯 Painel de Controle - Automações JC Decor",
+        show_lines=True,
+        title_style="bold blue",
+        header_style="bold white"
+    )
+    
+    table.add_column("Automação", style="bold cyan", width=10)
+    table.add_column("Status", style="bold", width=12)
+    table.add_column("Mensagem", width=30)
+    
+    table.add_row("C1", "✅ OK", "Cliente inserido com sucesso")
+    table.add_row("P1", "❌ ERROR", "Exception na execução")
+    
     console.print(table)
+    
+    # 3. Comandos
+    console.print("\n[bold green]Comandos:[/bold green] force <nome> | refresh | quit")
     
     print("=== FIM DO TESTE ===")
 
 if __name__ == "__main__":
-    test_basic()
+    test_monitor_simulation()

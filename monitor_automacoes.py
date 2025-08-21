@@ -405,7 +405,8 @@ def main():
             ))
             
             # Mostra tabela
-            console.print(build_dashboard())
+            dashboard_table = build_dashboard()
+            console.print(dashboard_table)
             
             # Mostra comandos disponíveis
             console.print("\n[bold green]Comandos:[/bold green] "
